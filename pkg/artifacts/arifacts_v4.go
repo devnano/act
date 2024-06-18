@@ -285,18 +285,20 @@ func (r *artifactV4Routes) uploadArtifact(ctx *ArtifactContext) {
 	}
 
 	comp := ctx.Req.URL.Query().Get("comp")
+	log.Debugf("uploadArtifact with url %s", ctx.Req.URL);
 	switch comp {
 	case "block", "appendBlock":
 
 		safeRunPath := safeResolve(r.baseDir, fmt.Sprint(task))
 		safePath := safeResolve(safeRunPath, artifactName)
 		safePath = safeResolve(safePath, artifactName+".zip")
+		log.Debugf("Writing file to %s", safePath);
 
 		file, err := func() (WritableFile, error) {
-			if comp == "appendBlock" {
+			// if comp == "appendBlock" {
 				return r.fs.OpenAppendable(safePath)
-			}
-			return r.fs.OpenWritable(safePath)
+			// }
+			// return r.fs.OpenWritable(safePath)
 		}()
 
 		if err != nil {
@@ -406,6 +408,7 @@ func (r *artifactV4Routes) getSignedArtifactURL(ctx *ArtifactContext) {
 
 func (r *artifactV4Routes) downloadArtifact(ctx *ArtifactContext) {
 	task, artifactName, ok := r.verifySignature(ctx, "DownloadArtifact")
+	log.Debugf("Downloading artifactName %s", artifactName);
 	if !ok {
 		return
 	}
@@ -413,7 +416,7 @@ func (r *artifactV4Routes) downloadArtifact(ctx *ArtifactContext) {
 	safeRunPath := safeResolve(r.baseDir, fmt.Sprint(task))
 	safePath := safeResolve(safeRunPath, artifactName)
 	safePath = safeResolve(safePath, artifactName+".zip")
-
+	log.Debugf("Downloading from %s", artifactName);
 	file, _ := r.rfs.Open(safePath)
 
 	_, _ = io.Copy(ctx.Resp, file)
